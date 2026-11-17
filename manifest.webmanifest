@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "DolceMagico",
+  "short_name": "DolceMagico",
+  "description": "I tuoi ingredienti diventano dolci!",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffaf5",
+  "theme_color": "#fff1ed",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
