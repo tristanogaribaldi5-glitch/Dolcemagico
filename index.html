@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff1ed">
+<meta name="description" content="Trasforma gli ingredienti che hai in dolci da preparare.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>DolceMagico</title>
+<style>
+:root{--pink:#f7c8c1;--rose:#a84d55;--cream:#fffaf5;--ink:#392c2b;--muted:#806d69}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#fff0ed,#fffaf5 42%);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+header{padding:25px 18px 18px;text-align:center}header .logo{font-size:48px}h1{margin:4px 0;color:#a84d55;font-family:Georgia,serif;font-size:34px}header p{margin:5px;color:var(--muted)}
+main{max-width:650px;margin:auto;padding:0 15px 40px}.panel{background:#fff;border:1px solid #f2ded9;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 7px 25px #8c51400c}
+label{display:block;font-weight:700;margin:12px 0 7px}textarea,select,input{width:100%;border:1px solid #e8d5d0;border-radius:13px;padding:13px;font:inherit;background:#fffdfc;color:var(--ink)}textarea{min-height:105px;resize:vertical}
+button{border:0;border-radius:14px;padding:14px 17px;background:var(--rose);color:white;font-weight:750;font-size:16px;cursor:pointer}button.secondary{background:#f8e8e4;color:#8c444b}button:disabled{opacity:.45}.full{width:100%;margin-top:14px}.row{display:flex;gap:10px}.row>*{flex:1}
+#result{display:none}.dessert-art{width:100%;max-height:220px;display:block;background:#fff4ee;border-radius:17px;margin-bottom:15px}
+h2{font-family:Georgia,serif;color:#984a51;margin:8px 0}h3{margin:17px 0 6px;color:#984a51}.meta{color:var(--muted);font-size:14px}.ingredient-list{padding-left:21px;line-height:1.8}.steps{padding-left:22px;line-height:1.7}.tip{background:#fff4e8;padding:12px;border-radius:12px;margin-top:14px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
+#install{display:none;margin:0 auto 12px;background:#68434a}
+</style>
+</head>
+<body>
+<header><div class="logo">🧁✨</div><h1>DolceMagico</h1><p>Tu metti gli ingredienti, al dolce pensiamo noi!</p></header>
+<main>
+<section class="panel">
+  <h2>Che cosa hai in cucina?</h2>
+  <label for="ingredients">I tuoi ingredienti</label>
+  <textarea id="ingredients" placeholder="Es. farina, uova, latte, zucchero, cacao, burro..."></textarea>
+  <div class="row">
+    <div><label for="kind">Tipo di dolce</label><select id="kind"><option value="any">Sorprendimi</option><option value="cake">Torta</option><option value="cookies">Biscotti</option><option value="spoon">Dolce al cucchiaio</option><option value="chocolate">Al cioccolato</option><option value="nooven">Senza forno</option></select></div>
+    <div><label for="people">Persone</label><select id="people"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+  </div>
+  <button class="full" id="make">✨ Crea il mio dolce</button>
+  <button class="secondary full" id="install">Installa DolceMagico sul telefono</button>
+</section>
+<section class="panel" id="result">
+  <svg class="dessert-art" viewBox="0 0 600 250" role="img" aria-label="Illustrazione del dolce"><defs><linearGradient id="cake" x2="0" y2="1"><stop stop-color="#f4c99b"/><stop offset="1" stop-color="#c77c58"/></linearGradient></defs><ellipse cx="300" cy="211" rx="190" ry="19" fill="#ead2c8"/><path d="M155 110 Q300 80 445 110 L420 194 Q300 220 180 194Z" fill="url(#cake)" stroke="#a75c4d" stroke-width="5"/><path d="M155 110 Q300 80 445 110 Q300 145 155 110Z" fill="#fff0d8" stroke="#a75c4d" stroke-width="4"/><path d="M180 135 Q220 150 260 135 T340 135 T420 135" fill="none" stroke="#fff4e6" stroke-width="12" stroke-linecap="round"/><circle cx="250" cy="92" r="17" fill="#a63d4b"/><circle cx="300" cy="82" r="17" fill="#a63d4b"/><circle cx="350" cy="92" r="17" fill="#a63d4b"/><path d="M300 60 q-10 -20 8 -28 q18 12 -8 28" fill="#72915c"/></svg>
+  <h2 id="recipeName"></h2><div class="meta" id="recipeMeta"></div>
+  <h3>Ingredienti</h3><ul class="ingredient-list" id="recipeIngredients"></ul>
+  <h3>Procedimento</h3><ol class="steps" id="recipeSteps"></ol>
+  <div class="tip" id="recipeTip"></div>
+  <div class="row"><button class="secondary" id="save">♡ Salva ricetta</button><button class="secondary" id="share">Condividi</button></div>
+</section>
+<section class="panel">
+  <h2>♡ Le tue ricette salvate</h2><div id="saved" class="meta">Non hai ancora salvato ricette.</div>
+</section>
+<footer>DolceMagico • Ricette suggerite in base agli ingredienti inseriti</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let current=null, deferredPrompt=null;
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install').style.display='block'});
+$('install').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else alert('Apri il menu ⋮ di Chrome e scegli “Installa app” oppure “Aggiungi a schermata Home”.')});
+const recipes=[
+{key:'cake',name:'Torta soffice della dispensa',kind:'cake',needs:['farina','uova','zucchero'],optional:['latte','burro','olio','lievito','limone','vaniglia'],time:'15 min preparazione + 35 min forno',base:[['farina',200,'g'],['zucchero',120,'g'],['uova',2,''],['latte',100,'ml'],['olio',70,'ml'],['lievito',1,'bustina']],steps:['Scalda il forno a 180 °C e prepara una tortiera da circa 20 cm.','Sbatti le uova con lo zucchero finché diventano chiare e spumose.','Aggiungi latte e olio, poi incorpora la farina e il lievito setacciati.','Versa nella tortiera e cuoci per 30–35 minuti. Fai la prova stecchino e lascia raffreddare.'],tip:'Se hai limone o vaniglia, aggiungine un po’ per profumare l’impasto.'},
+{key:'cookies',name:'Biscotti casalinghi',kind:'cookies',needs:['farina','zucchero'],optional:['uova','burro','olio','cacao','cioccolato'],time:'15 min preparazione + 12 min forno',base:[['farina',220,'g'],['zucchero',90,'g'],['burro',100,'g'],['uova',1,''],['lievito',0.5,'cucchiaino']],steps:['Lavora il burro morbido con lo zucchero.','Unisci l’uovo e poi farina e lievito; impasta velocemente.','Forma delle palline, appiattiscile e disponile su una teglia con carta forno.','Cuoci a 180 °C per 10–12 minuti. Lasciali raffreddare prima di spostarli.'],tip:'Puoi aggiungere cacao o pezzetti di cioccolato se li hai.'},
+{key:'spoon',name:'Crema dolce al cucchiaio',kind:'spoon',needs:['latte','zucchero'],optional:['uova','farina','cacao','cioccolato','vaniglia'],time:'10 min preparazione + 8 min cottura',base:[['latte',500,'ml'],['zucchero',70,'g'],['uova',2,'tuorli'],['farina',30,'g']],steps:['Scalda il latte in un pentolino senza farlo bollire.','In una ciotola mescola tuorli, zucchero e farina.','Versa il latte caldo a filo mescolando, poi rimetti tutto sul fuoco basso.','Cuoci mescolando finché la crema si addensa. Versa in coppette e fai raffreddare.'],tip:'Per la versione al cacao, sciogli un cucchiaio di cacao nel composto prima di aggiungere il latte.'},
+{key:'choco',name:'Tortino morbido al cacao',kind:'chocolate',needs:['cacao','farina','zucchero'],optional:['uova','latte','burro','olio','lievito'],time:'10 min preparazione + 20 min forno',base:[['farina',150,'g'],['zucchero',120,'g'],['cacao',35,'g'],['uova',2,''],['latte',120,'ml'],['olio',60,'ml'],['lievito',1,'cucchiaino']],steps:['Mescola in una ciotola farina, zucchero, cacao e lievito.','Aggiungi uova, latte e olio e mescola fino a ottenere un impasto liscio.','Versa in una piccola tortiera imburrata e infarinata.','Cuoci a 180 °C per circa 18–22 minuti. Lascia intiepidire.'],tip:'Per un cuore più goloso, aggiungi qualche quadretto di cioccolato al centro.'},
+{key:'nooven',name:'Dolce fresco in coppetta',kind:'nooven',needs:['yogurt','biscotti'],optional:['miele','frutta','cioccolato','panna'],time:'15 min + 30 min in frigorifero',base:[['yogurt',300,'g'],['biscotti',100,'g'],['miele',2,'cucchiai'],['frutta',150,'g']],steps:['Sbriciola i biscotti e distribuiscili sul fondo delle coppette.','Mescola lo yogurt con il miele.','Aggiungi lo yogurt sopra i biscotti e completa con frutta a pezzetti.','Metti in frigorifero per almeno 30 minuti prima di servire.'],tip:'Se non hai frutta, completa con cacao o scaglie di cioccolato.'}
+];
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function renderSaved(){let a=JSON.parse(localStorage.getItem('dm-saved')||'[]');$('saved').innerHTML=a.length?a.map((r,i)=>`<p>🍰 <b>${r.name}</b> <button class="secondary" data-del="${i}" style="padding:6px 10px;font-size:12px">Rimuovi</button></p>`).join(''):'Non hai ancora salvato ricette.'}
+function create(){let raw=norm($('ingredients').value.trim());if(!raw){alert('Scrivi almeno un ingrediente.');return}let words=raw.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);let kind=$('kind').value;let candidates=recipes.filter(r=>(kind==='any'||r.kind===kind||kind==='chocolate'&&r.key==='choco'||kind==='nooven'&&r.key==='nooven')&&r.needs.every(n=>words.some(w=>w.includes(n)||n.includes(w))));if(!candidates.length)candidates=recipes.filter(r=>r.needs.filter(n=>words.some(w=>w.includes(n)||n.includes(w))).length>=2);if(!candidates.length)candidates=[recipes.find(r=>r.key==='cake')];let r=candidates.sort((a,b)=>b.needs.filter(n=>words.some(w=>w.includes(n))).length-a.needs.filter(n=>words.some(w=>w.includes(n))).length)[0];let mult=Number($('people').value)/4;current={name:r.name,meta:`${$('people').value} persone • ${r.time}`,ingredients:r.base.map(([n,q,u])=>`${Math.round(q*mult*10)/10} ${u} ${n}`),steps:r.steps,tip:r.tip};$('recipeName').textContent=current.name;$('recipeMeta').textContent=current.meta;$('recipeIngredients').innerHTML=current.ingredients.map(x=>`<li>${x}</li>`).join('');$('recipeSteps').innerHTML=current.steps.map(x=>`<li>${x}</li>`).join('');$('recipeTip').textContent='✨ Consiglio: '+current.tip;$('result').style.display='block';$('result').scrollIntoView({behavior:'smooth'});}
+$('make').onclick=create;
+$('save').onclick=()=>{if(!current)return;let a=JSON.parse(localStorage.getItem('dm-saved')||'[]');a.unshift(current);localStorage.setItem('dm-saved',JSON.stringify(a.slice(0,30)));renderSaved();alert('Ricetta salvata!')};
+$('share').onclick=()=>{if(!current)return;let t=current.name+'\n'+current.meta+'\n\nIngredienti:\n'+current.ingredients.join('\n')+'\n\nProcedimento:\n'+current.steps.map((s,i)=>(i+1)+'. '+s).join('\n');if(navigator.share)navigator.share({title:current.name,text:t});else navigator.clipboard.writeText(t).then(()=>alert('Ricetta copiata!'))};
+$('saved').onclick=e=>{let b=e.target.closest('[data-del]');if(!b)return;let a=JSON.parse(localStorage.getItem('dm-saved')||'[]');a.splice(+b.dataset.del,1);localStorage.setItem('dm-saved',JSON.stringify(a));renderSaved()};
+renderSaved();
+</script>
+</body></html>
